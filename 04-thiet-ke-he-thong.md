@@ -88,6 +88,7 @@ Việc chuyển đổi chỉ là **đổi một biến môi trường** `DATA_BA
 | Kiểm thử E2E | **Playwright** | 1.x | Giai đoạn sau, cho luồng chính + kiểm tra rò rỉ dữ liệu |
 | Nén ảnh | **browser-image-compression** | 2.x | Nén phía trình duyệt (FR-07.3) |
 | Biểu đồ | CSS/SVG thuần (thanh ngang) | — | Đủ cho FR-15, không cần thư viện nặng (NFR-P5) |
+| Mã QR | **qrcode** (vẽ ảnh) | 1.x | Chỉ để *vẽ* QR; chuỗi VietQR do `domain/vietqr.ts` tự sinh, không gửi số TK ra ngoài (FR-19.6). Thêm lib này là việc "Hỏi trước". |
 | Backend (sau) | **Supabase** (Postgres, Auth, Storage) | — | Gói miễn phí |
 | Triển khai (sau) | **Vercel** | — | Gói miễn phí |
 
@@ -116,6 +117,7 @@ FundManager/
 │   │   ├── balance.ts         #   computeBalance(), computeTotals()
 │   │   ├── payment-status.ts  #   computeMemberStatus(), summarizeFund()
 │   │   ├── transaction-rules.ts  # Bất biến: không xóa, chuyển voided, điều kiện ảnh...
+│   │   ├── vietqr.ts          #   Sinh chuỗi VietQR (EMVCo) + CRC-16 — HÀM THUẦN, test được
 │   │   └── errors.ts          #   DomainError + mã lỗi
 │   ├── ports/                 # Hợp đồng (interface) truy cập hạ tầng
 │   │   ├── repositories.ts    #   *Repository + UnitOfWork
@@ -169,6 +171,11 @@ export interface Fund {
   name: string;                 // 1–100 ký tự
   description: string | null;   // ≤ 500
   targetPerMember: Vnd;         // ≥ 0; 0 = không đặt mức đóng
+  // Thông tin nhận tiền cho VietQR (FR-19). null = chưa gắn ⇒ không hiện QR.
+  bankBin: string | null;       // mã BIN Napas của ngân hàng
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+  transferPrefix: string | null; // tiền tố nội dung CK, vd 'QUY12A1'
   memberToken: string;          // ≥128-bit ngẫu nhiên
   publicToken: string;
   publicEnabled: boolean;       // mặc định false
@@ -496,6 +503,7 @@ Bạn muốn **áp dụng mọi kỹ năng** — bảng này gắn mỗi bước
 | 7 | Lớp miền + test trước: money, balance, payment-status, rules | `test-driven-development` |
 | 8 | Adapter in-memory + contract test + seed data | `test-driven-development`, `api-and-interface-design` |
 | 9 | UI thủ quỹ: tạo quỹ, thành viên, ghi thu/chi (mobile-first, a11y) | `frontend-ui-engineering`, `accessibility-engineering` |
+| **9b** | **VietQR (FR-19): `domain/vietqr.ts` test-first + gắn tài khoản NH + UI hiển thị QR cho thành viên** — làm sớm theo yêu cầu | `test-driven-development`, `frontend-ui-engineering`, `security-and-hardening` |
 | 10 | Trang xem theo token (thành viên/công khai), tổng quan, nhật ký | `frontend-ui-engineering`, `security-and-hardening` |
 | 11 | Hủy/sửa giao dịch + nhật ký, biểu đồ, lọc/tìm | `incremental-implementation`, `debugging-and-error-recovery` |
 | 12 | Viết migration Supabase (schema + RLS + trigger) | `security-and-hardening`, `api-and-interface-design` |
@@ -522,7 +530,7 @@ Xuyên suốt: `git-workflow-and-versioning` (commit sạch mỗi bước), `cod
 
 - Chi tiết SQL migration (schema cụ thể, câu lệnh RLS, trigger) → Bước 12.
 - Thiết kế giao diện pixel (wireframe/màu/typography chi tiết) → đưa vào bước UI (9–10); tài liệu này chỉ chốt mobile-first + a11y + mã màu +/− theo NFR-U9.
-- Khớp giao dịch ngân hàng, VietQR, đồng thủ quỹ → sau MVP (Won't/Could của Bước 2).
+- **Tự động khớp** giao dịch ngân hàng (US-22/FR-20), đồng thủ quỹ → sau MVP. (VietQR — US-21/FR-19 — đã đưa vào MVP.)
 
 ## 14. Câu hỏi mở (Open Questions)
 
