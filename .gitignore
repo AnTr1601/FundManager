@@ -2,13 +2,15 @@
 .claude/
 skills-lock.json
 
-# Node / Next.js (chuẩn bị cho bước scaffold)
+# Node / Next.js
 node_modules/
 .next/
 out/
 build/
 dist/
 coverage/
+*.tsbuildinfo
+next-env.d.ts
 
 # Biến môi trường (không bao giờ commit secret)
 .env
