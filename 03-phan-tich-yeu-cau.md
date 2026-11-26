@@ -51,6 +51,7 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 - Không có app native Android hoặc iOS (chỉ web app).
 - Không hỗ trợ nhiều loại tiền tệ (chỉ VND).
 - Không có tính năng OCR đọc hóa đơn tự động.
+- **Không có mô hình "kỳ" đóng tiền định kỳ** (nhiều đợt trong một quỹ). MVP: mỗi quỹ là một đợt thu; đóng nhiều kỳ thì tạo quỹ riêng cho mỗi kỳ. (Để phiên bản sau.)
 
 ---
 

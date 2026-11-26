@@ -37,6 +37,7 @@ Web app quản lý quỹ minh bạch cho một lớp học, câu lạc bộ, nh�
 ## 4. Để sau (sau MVP)
 
 - [ ] **Tự động khớp giao dịch** qua dịch vụ đọc biến động số dư tài khoản ngân hàng (SePay, Casso… có webhook): app tự tạo khoản thu và khớp với thành viên theo nội dung chuyển khoản. Vẫn không giữ tiền.
+- [ ] **Đóng tiền định kỳ / nhiều kỳ** trong cùng một quỹ (mô hình "kỳ"): theo dõi trạng thái đóng theo từng tháng/đợt. MVP giữ đơn giản mỗi quỹ = một đợt thu; muốn nhiều kỳ thì tạo quỹ mới cho mỗi kỳ.
 - [ ] Nhắc đóng tiền tự động.
 - [ ] Xuất báo cáo PDF hoặc Excel cuối kỳ.
 - [ ] Bình luận hoặc hỏi đáp dưới từng khoản chi.
