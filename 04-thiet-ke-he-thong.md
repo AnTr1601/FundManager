@@ -432,7 +432,7 @@ export async function recordExpense(fundId: string, formData: FormData): Promise
 
 | Khía cạnh | Giai đoạn đầu (in-memory) | Giai đoạn Supabase |
 |---|---|---|
-| Đăng nhập TQ | **Đăng nhập giả lập dev** (chọn/nhập 1 user giả, đặt cookie phiên) | Google OAuth + email magic link (FR-01) |
+| Đăng nhập TQ | **Đăng nhập giả lập dev** (chọn/nhập 1 user giả, đặt cookie phiên) | **Chỉ Google OAuth** (FR-01) — app không gửi email nào |
 | Cưỡng chế quyền | **Ở tầng ứng dụng** (use-case kiểm `ownerId`, chiếu dữ liệu theo token) | Giữ nguyên tầng ứng dụng **+ thêm RLS** (phòng thủ nhiều lớp, NFR-S2) |
 | Không xóa GD / nhật ký bất biến | Port không có hàm xóa; audit chỉ-thêm | Thêm trigger + thiếu vắng policy DELETE/UPDATE ở DB (NFR-I3) |
 | Ảnh | Object URL tạm trong RAM | Bucket riêng tư + signed URL ≤1h (NFR-S4) |
@@ -534,6 +534,6 @@ Xuyên suốt: `git-workflow-and-versioning` (commit sạch mỗi bước), `cod
 
 ## 14. Câu hỏi mở (Open Questions)
 
-1. **Đăng nhập giả lập giai đoạn đầu:** chấp nhận một màn hình "chọn user dev" đơn giản (không mật khẩu) để làm UI trước, đúng không? (Sẽ thay bằng Google/magic link ở Bước 13.)
+1. **Đăng nhập giả lập giai đoạn đầu:** chấp nhận một màn hình "chọn user dev" đơn giản (không mật khẩu) để làm UI trước, đúng không? (Sẽ thay bằng **Google OAuth** ở Bước 13 — app không gửi email nào.)
 2. **Ngôn ngữ trong mã nguồn:** định danh code bằng tiếng Anh, chuỗi hiển thị + commit message + tài liệu bằng tiếng Việt — ổn chứ?
 3. **Biểu đồ:** tự vẽ thanh ngang bằng SVG/CSS (nhẹ, không thêm lib) thay vì dùng thư viện chart — đồng ý không?

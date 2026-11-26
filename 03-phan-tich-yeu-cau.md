@@ -33,7 +33,7 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 ## 2. Phạm vi
 
 ### 2.1. Trong phạm vi (MVP)
-- Đăng nhập cho thủ quỹ (Google, email không mật khẩu).
+- Đăng nhập cho thủ quỹ (**chỉ Google OAuth**).
 - Tạo và quản lý quỹ, thành viên.
 - Ghi khoản thu (chuyển khoản, tiền mặt) và khoản chi kèm ảnh chứng từ.
 - Sửa và hủy giao dịch, có nhật ký thay đổi chỉ-thêm.
@@ -46,8 +46,9 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 - **Không giữ, chuyển hay xử lý tiền thật.** Hệ thống chỉ ghi chép và **tạo mã VietQR** để người đóng tự chuyển vào tài khoản ngân hàng của thủ quỹ. App không nằm trong luồng tiền, không phải dịch vụ trung gian thanh toán.
 - Không kết nối API ngân hàng và **không tự động đối soát/khớp giao dịch** (để phiên bản 2 — xem US-22).
 - Không nhận tiền vào "ví" trong app rồi cho rút ra (việc này cần giấy phép trung gian thanh toán — ngoài phạm vi và chủ ý tránh).
+- **Không gửi email dưới bất kỳ hình thức nào** (không magic link, không thông báo, không nhắc nợ). Đăng nhập chỉ bằng Google.
+- Không gửi thông báo đẩy hay SMS. Biến động số dư chỉ **hiển thị trên màn hình** khi người dùng mở quỹ (mô hình "kéo" — FR-10, FR-11, FR-13).
 - Không có app native Android hoặc iOS (chỉ web app).
-- Không gửi thông báo đẩy, SMS hay email nhắc nợ tự động.
 - Không hỗ trợ nhiều loại tiền tệ (chỉ VND).
 - Không có tính năng OCR đọc hóa đơn tự động.
 
@@ -57,7 +58,7 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 
 | Vai trò | Mô tả | Xác thực |
 |---|---|---|
-| **Thủ quỹ (TQ)** | Tạo quỹ, ghi, sửa, hủy giao dịch, quản lý thành viên và link | Tài khoản (Google OAuth hoặc email magic link) |
+| **Thủ quỹ (TQ)** | Tạo quỹ, ghi, sửa, hủy giao dịch, quản lý thành viên và link | Tài khoản (Google OAuth) |
 | **Thành viên (TV)** | Xem đầy đủ quỹ | Token trong link thành viên |
 | **Khách xem (KX)** | Xem quỹ đã ẩn thông tin cá nhân | Token trong link công khai |
 | **Người phát triển** | Xây dựng, triển khai, bảo trì | Quyền quản trị Supabase và Vercel |
@@ -94,8 +95,8 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 ### 4.2. Mô tả chi tiết
 
 #### FR-01: Xác thực thủ quỹ
-- FR-01.1: Hệ thống cho phép đăng nhập bằng Google OAuth.
-- FR-01.2: Hệ thống cho phép đăng nhập bằng email qua magic link (không mật khẩu). Link hết hạn sau 1 giờ.
+- FR-01.1: Hệ thống cho phép đăng nhập bằng **Google OAuth**. Đây là cách đăng nhập duy nhất (không dùng email/magic link, không mật khẩu).
+- FR-01.2: **App không gửi email dưới bất kỳ hình thức nào** (không magic link, không thông báo, không nhắc nợ). Nhờ vậy không cần dịch vụ gửi email.
 - FR-01.3: Phiên đăng nhập duy trì ít nhất 7 ngày trên cùng thiết bị.
 - FR-01.4: Mọi trang quản trị (tạo, sửa giao dịch, quản lý thành viên, link) yêu cầu đăng nhập. Nếu chưa đăng nhập thì chuyển về trang đăng nhập.
 - FR-01.5: Có chức năng đăng xuất.

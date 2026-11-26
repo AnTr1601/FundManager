@@ -85,7 +85,7 @@ audit_logs (
 | Frontend | Next.js / React + Tailwind | Mobile-first, vì người dùng mở từ link Zalo |
 | Backend + DB + Auth + Storage | **Supabase** (Postgres) | Gói miễn phí dư dùng. Có thể thay bằng Firebase |
 | Deploy | Vercel | Miễn phí cho dự án cá nhân |
-| Đăng nhập | Email hoặc Google cho thủ quỹ | Thành viên xem qua link, không cần tài khoản |
+| Đăng nhập | Google cho thủ quỹ | Thành viên xem qua link, không cần tài khoản. **App không gửi email nào** |
 
 ## 7. Lộ trình
 

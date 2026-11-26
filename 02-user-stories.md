@@ -10,7 +10,7 @@
 
 | Mã | Vai trò | Mô tả | Cách truy cập |
 |---|---|---|---|
-| **TQ** | Thủ quỹ | Người tạo và quản lý quỹ, ghi thu chi | Đăng nhập (Google hoặc email) |
+| **TQ** | Thủ quỹ | Người tạo và quản lý quỹ, ghi thu chi | Đăng nhập (Google) |
 | **TV** | Thành viên | Người đóng tiền vào quỹ | **Link thành viên**, không cần tài khoản |
 | **KX** | Khách xem | Nhà tài trợ, người ngoài | **Link công khai**, thông tin cá nhân bị ẩn |
 
@@ -61,12 +61,12 @@
 ### Epic 1: Tài khoản và quỹ
 
 #### US-01: Đăng nhập · Must
-> Là **thủ quỹ**, tôi muốn **đăng nhập bằng tài khoản Google hoặc email**, để **chỉ mình tôi mới ghi và sửa được dữ liệu quỹ**.
+> Là **thủ quỹ**, tôi muốn **đăng nhập bằng tài khoản Google**, để **chỉ mình tôi mới ghi và sửa được dữ liệu quỹ**.
 
 **Tiêu chí chấp nhận**
 - **AC1:** _Cho trước_ tôi chưa đăng nhập, _khi_ bấm "Đăng nhập với Google" và cấp quyền, _thì_ tôi được chuyển đến trang danh sách quỹ của mình.
-- **AC2:** _Cho trước_ tôi chọn đăng nhập bằng email, _khi_ nhập email và bấm vào link trong hộp thư, _thì_ tôi đăng nhập thành công mà không cần mật khẩu.
-- **AC3:** _Cho trước_ tôi chưa đăng nhập, _khi_ truy cập trực tiếp trang ghi giao dịch, _thì_ hệ thống chuyển tôi về trang đăng nhập.
+- **AC2:** _Cho trước_ tôi chưa đăng nhập, _khi_ truy cập trực tiếp trang ghi giao dịch, _thì_ hệ thống chuyển tôi về trang đăng nhập.
+- **AC3:** Hệ thống **không gửi email** dưới bất kỳ hình thức nào (không magic link, không thông báo).
 
 #### US-02: Tạo quỹ mới · Must
 > Là **thủ quỹ**, tôi muốn **tạo một quỹ với tên, mô tả và mức đóng mỗi người**, để **bắt đầu quản lý thu chi**.
