@@ -33,22 +33,25 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 ## 2. Phạm vi
 
 ### 2.1. Trong phạm vi (MVP)
-- Đăng nhập cho thủ quỹ (Google, email không mật khẩu).
+- Đăng nhập cho thủ quỹ (**chỉ Google OAuth**).
 - Tạo và quản lý quỹ, thành viên.
 - Ghi khoản thu (chuyển khoản, tiền mặt) và khoản chi kèm ảnh chứng từ.
 - Sửa và hủy giao dịch, có nhật ký thay đổi chỉ-thêm.
 - Tổng quan số dư, trạng thái đóng tiền của từng thành viên.
 - Link thành viên và link công khai, có thể thu hồi.
+- **Mã VietQR điền sẵn số tiền + nội dung** cho từng thành viên (tiền chuyển thẳng vào tài khoản thủ quỹ; app không giữ tiền).
 - Biểu đồ chi theo danh mục, lọc và tìm giao dịch (Should).
 
 ### 2.2. Ngoài phạm vi
-- **Không giữ, chuyển hay xử lý tiền thật.** Hệ thống chỉ ghi chép.
-- Không kết nối API ngân hàng và không tự động đối soát giao dịch (để phiên bản 2).
-- Không tạo mã VietQR (để phiên bản 2).
+- **Không giữ, chuyển hay xử lý tiền thật.** Hệ thống chỉ ghi chép và **tạo mã VietQR** để người đóng tự chuyển vào tài khoản ngân hàng của thủ quỹ. App không nằm trong luồng tiền, không phải dịch vụ trung gian thanh toán.
+- Không kết nối API ngân hàng và **không tự động đối soát/khớp giao dịch** (để phiên bản 2 — xem US-22).
+- Không nhận tiền vào "ví" trong app rồi cho rút ra (việc này cần giấy phép trung gian thanh toán — ngoài phạm vi và chủ ý tránh).
+- **Không gửi email dưới bất kỳ hình thức nào** (không magic link, không thông báo, không nhắc nợ). Đăng nhập chỉ bằng Google.
+- Không gửi thông báo đẩy hay SMS. Biến động số dư chỉ **hiển thị trên màn hình** khi người dùng mở quỹ (mô hình "kéo" — FR-10, FR-11, FR-13).
 - Không có app native Android hoặc iOS (chỉ web app).
-- Không gửi thông báo đẩy, SMS hay email nhắc nợ tự động.
 - Không hỗ trợ nhiều loại tiền tệ (chỉ VND).
 - Không có tính năng OCR đọc hóa đơn tự động.
+- **Không có mô hình "kỳ" đóng tiền định kỳ** (nhiều đợt trong một quỹ). MVP: mỗi quỹ là một đợt thu; đóng nhiều kỳ thì tạo quỹ riêng cho mỗi kỳ. (Để phiên bản sau.)
 
 ---
 
@@ -56,7 +59,7 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 
 | Vai trò | Mô tả | Xác thực |
 |---|---|---|
-| **Thủ quỹ (TQ)** | Tạo quỹ, ghi, sửa, hủy giao dịch, quản lý thành viên và link | Tài khoản (Google OAuth hoặc email magic link) |
+| **Thủ quỹ (TQ)** | Tạo quỹ, ghi, sửa, hủy giao dịch, quản lý thành viên và link | Tài khoản (Google OAuth) |
 | **Thành viên (TV)** | Xem đầy đủ quỹ | Token trong link thành viên |
 | **Khách xem (KX)** | Xem quỹ đã ẩn thông tin cá nhân | Token trong link công khai |
 | **Người phát triển** | Xây dựng, triển khai, bảo trì | Quyền quản trị Supabase và Vercel |
@@ -87,12 +90,14 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 | FR-16 | Lọc và tìm giao dịch | US-19 | Should |
 | FR-17 | Xuất CSV | US-20 | Could |
 | FR-18 | Đồng thủ quỹ | US-05 | Could |
+| FR-19 | Mã VietQR cho khoản đóng | US-21 | Must |
+| FR-20 | Tự động khớp giao dịch ngân hàng | US-22 | Won't |
 
 ### 4.2. Mô tả chi tiết
 
 #### FR-01: Xác thực thủ quỹ
-- FR-01.1: Hệ thống cho phép đăng nhập bằng Google OAuth.
-- FR-01.2: Hệ thống cho phép đăng nhập bằng email qua magic link (không mật khẩu). Link hết hạn sau 1 giờ.
+- FR-01.1: Hệ thống cho phép đăng nhập bằng **Google OAuth**. Đây là cách đăng nhập duy nhất (không dùng email/magic link, không mật khẩu).
+- FR-01.2: **App không gửi email dưới bất kỳ hình thức nào** (không magic link, không thông báo, không nhắc nợ). Nhờ vậy không cần dịch vụ gửi email.
 - FR-01.3: Phiên đăng nhập duy trì ít nhất 7 ngày trên cùng thiết bị.
 - FR-01.4: Mọi trang quản trị (tạo, sửa giao dịch, quản lý thành viên, link) yêu cầu đăng nhập. Nếu chưa đăng nhập thì chuyển về trang đăng nhập.
 - FR-01.5: Có chức năng đăng xuất.
@@ -204,6 +209,19 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 #### FR-18: Đồng thủ quỹ (Could)
 - FR-18.1: Thủ quỹ chính mời người khác qua email. Khi người đó đăng nhập bằng email ấy thì có quyền như thủ quỹ, trừ quyền mời hoặc gỡ thủ quỹ khác.
 
+#### FR-19: Mã VietQR cho khoản đóng (Must)
+- FR-19.1: Thủ quỹ nhập thông tin nhận tiền của quỹ: **ngân hàng** (chọn từ danh sách, lưu mã BIN Napas), **số tài khoản**, **tên chủ tài khoản**, và **tiền tố nội dung** (không bắt buộc, ví dụ `QUY12A1`). Các trường này không bắt buộc khi tạo quỹ; thiếu thì chỉ không hiện QR.
+- FR-19.2: Khi quỹ đã có đủ thông tin nhận tiền, hệ thống sinh **mã VietQR** theo chuẩn **EMVCo/Napas VietQR** (dịch vụ chuyển nhanh NAPAS247, mã tiền tệ 704 - VND), có **điểm kiểm tra CRC-16/CCITT**.
+- FR-19.3: Số tiền trong QR **điền sẵn** bằng `max(0, mức đóng − số thành viên đó đã đóng)`. Nếu quỹ không đặt mức đóng, QR để **trống số tiền** (người đóng tự nhập).
+- FR-19.4: Nội dung chuyển khoản điền sẵn theo mẫu `[tiền tố] [TÊN THÀNH VIÊN viết hoa, bỏ dấu]`, cắt tối đa theo giới hạn độ dài của trường nội dung VietQR.
+- FR-19.5: Trang hiển thị QR có nút **"Lưu ảnh QR"** và **"Sao chép nội dung chuyển khoản"** (dự phòng khi không quét trực tiếp được).
+- FR-19.6: **Chuỗi VietQR được sinh hoàn toàn phía client/máy chủ của hệ thống** (hàm thuần), **không gửi số tài khoản tới dịch vụ bên thứ ba**. Ảnh QR được vẽ tại chỗ.
+- FR-19.7: App **không** tạo giao dịch khi có người quét QR. Thủ quỹ vẫn ghi nhận khoản thu (FR-05) sau khi tiền về. Tự động khớp là FR-20 (phiên bản sau).
+- FR-19.8: Mã VietQR hiển thị cho **thủ quỹ và thành viên** (qua link thành viên). **Không** hiển thị ở link công khai (vì gắn với việc đóng tiền của thành viên).
+
+#### FR-20: Tự động khớp giao dịch ngân hàng (Won't — phiên bản sau)
+- FR-20.1: Nhận webhook biến động số dư từ dịch vụ bên thứ ba (SePay/Casso), tạo khoản thu và khớp với thành viên theo nội dung chuyển khoản. Endpoint phải **idempotent** theo mã giao dịch ngân hàng để một biến động không bị ghi hai lần. Vẫn không giữ tiền.
+
 ---
 
 ## 5. Quy tắc nghiệp vụ (Business Rules)
@@ -220,6 +238,7 @@ Web app (chạy trên trình duyệt, ưu tiên điện thoại) giúp thủ qu�
 | BR-08 | Thành viên đã có giao dịch thì không xóa được, chỉ ngưng tham gia |
 | BR-09 | Thu hồi link sẽ vô hiệu hóa token cũ ngay lập tức |
 | BR-10 | Mỗi giao dịch luôn ghi lại người tạo (`created_by`) và thời điểm tạo do máy chủ cấp, người dùng không sửa được |
+| BR-11 | App **không giữ, không trung chuyển tiền**. VietQR chỉ chuyển tiền thẳng vào tài khoản ngân hàng của thủ quỹ; "rút tiền" nghĩa là ghi một khoản chi, không phải lệnh chuyển tiền thật |
 
 ---
 
@@ -247,6 +266,10 @@ erDiagram
 | name | text | NOT NULL, 1–100 ký tự | |
 | description | text | ≤ 500 ký tự | |
 | target_per_member | bigint | ≥ 0, mặc định 0 | Mức đóng (VND) |
+| bank_bin | text | | Mã BIN Napas của ngân hàng (VietQR) |
+| bank_account_number | text | | Số tài khoản nhận tiền của thủ quỹ |
+| bank_account_name | text | | Tên chủ tài khoản |
+| transfer_prefix | text | ≤ 20 ký tự | Tiền tố nội dung CK, ví dụ `QUY12A1` |
 | member_token | text | UNIQUE, NOT NULL | Token link thành viên |
 | public_token | text | UNIQUE, NOT NULL | Token link công khai |
 | public_enabled | boolean | mặc định false | |
@@ -334,6 +357,8 @@ erDiagram
 | Xem ảnh chuyển khoản (khoản thu) | ✅ | ✅ | ❌ | ❌ |
 | Xem trạng thái đã đóng / chưa đóng | ✅ | ✅ | ❌ | ❌ |
 | Xem nhật ký | ✅ | ✅ | ✅ (ẩn tên thành viên) | ❌ |
+| Gắn/sửa tài khoản ngân hàng của quỹ | ✅ | ❌ | ❌ | ❌ |
+| Xem mã VietQR để đóng quỹ | ✅ | ✅ | ❌ | ❌ |
 | Xuất CSV | ✅ | ❌ | ❌ | ❌ |
 
 ### 7.2. Cơ chế thực thi
@@ -479,6 +504,9 @@ erDiagram
 | AT-29 | Phân quyền | Thủ quỹ A truy cập quỹ của thủ quỹ B bằng ID | Bị từ chối |
 | AT-30 | FR-15 | Có chi Ăn uống 600.000, In ấn 400.000 | Biểu đồ: Ăn uống 60%, In ấn 40% |
 | AT-31 | FR-16 | Tìm "nuoc" | Tìm được giao dịch có mục đích "Mua nước" |
+| AT-32 | FR-19 | Quỹ mức đóng 100.000, thành viên A đã đóng 30.000, mở trang đóng tiền | QR điền sẵn số tiền 70.000, nội dung `[tiền tố] A` (không dấu) |
+| AT-33 | FR-19 | Kiểm tra chuỗi VietQR sinh ra | Hợp lệ EMVCo, CRC-16 đúng, quét được bằng app ngân hàng, tiền vào đúng tài khoản thủ quỹ |
+| AT-34 | FR-19 | Quỹ chưa gắn tài khoản ngân hàng | Không hiện QR, hiện hướng dẫn thủ quỹ bổ sung; app vẫn ghi thu chi bình thường |
 
 ### 11.2. Kiểm thử phi chức năng
 
@@ -498,8 +526,8 @@ erDiagram
 
 MVP được coi là **đạt** khi thỏa mãn **tất cả** các điều kiện sau:
 
-- [ ] Toàn bộ yêu cầu chức năng mức **Must** (FR-01 → FR-14, phần link thành viên) đã hoàn thành.
-- [ ] Đạt toàn bộ kịch bản AT-01 → AT-29.
+- [ ] Toàn bộ yêu cầu chức năng mức **Must** (FR-01 → FR-14 phần link thành viên, **và FR-19 VietQR**) đã hoàn thành.
+- [ ] Đạt toàn bộ kịch bản AT-01 → AT-29 **và AT-32 → AT-34**.
 - [ ] Đạt các kiểm thử phi chức năng AT-N1, AT-N3, AT-N4, AT-N7, AT-N8.
 - [ ] **Không có lỗi nghiêm trọng** còn tồn tại: sai số dư, lộ dữ liệu, mất dữ liệu, xóa được giao dịch hay nhật ký.
 - [ ] Ít nhất **một lớp hoặc CLB thật** dùng liên tục trong **2 tuần** và có ít nhất 20 giao dịch được ghi.
@@ -531,3 +559,5 @@ MVP được coi là **đạt** khi thỏa mãn **tất cả** các điều ki�
 | US-18 | FR-15 | AT-30 |
 | US-19 | FR-16 | AT-31 |
 | US-20 | FR-17 | _(Could, kiểm thử khi làm)_ |
+| US-21 | FR-19 | AT-32, AT-33, AT-34 |
+| US-22 | FR-20 | _(Won't, kiểm thử khi làm)_ |

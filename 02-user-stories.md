@@ -10,7 +10,7 @@
 
 | Mã | Vai trò | Mô tả | Cách truy cập |
 |---|---|---|---|
-| **TQ** | Thủ quỹ | Người tạo và quản lý quỹ, ghi thu chi | Đăng nhập (Google hoặc email) |
+| **TQ** | Thủ quỹ | Người tạo và quản lý quỹ, ghi thu chi | Đăng nhập (Google) |
 | **TV** | Thành viên | Người đóng tiền vào quỹ | **Link thành viên**, không cần tài khoản |
 | **KX** | Khách xem | Nhà tài trợ, người ngoài | **Link công khai**, thông tin cá nhân bị ẩn |
 
@@ -49,9 +49,10 @@
 | US-18 | Xem và chia sẻ | Biểu đồ chi theo danh mục | TV | Should | 2 |
 | US-19 | Xem và chia sẻ | Lọc và tìm giao dịch | TV | Should | 2 |
 | US-20 | Báo cáo | Xuất danh sách giao dịch ra CSV | TQ | Could | 2 |
-| US-21 | Thanh toán | Mã VietQR cho từng thành viên | TV | Won't | 3 |
+| US-21 | Thanh toán | Mã VietQR điền sẵn số tiền + nội dung cho từng thành viên | TV, TQ | **Must** | 3 |
+| US-22 | Thanh toán | Tự động khớp giao dịch ngân hàng qua webhook | TQ | Won't | 5 |
 
-**Tổng điểm Must:** 33 SP. **Should:** 6 SP. **Could:** 5 SP.
+**Tổng điểm Must:** 36 SP. **Should:** 6 SP. **Could:** 5 SP. **Won't:** 5 SP.
 
 ---
 
@@ -60,12 +61,12 @@
 ### Epic 1: Tài khoản và quỹ
 
 #### US-01: Đăng nhập · Must
-> Là **thủ quỹ**, tôi muốn **đăng nhập bằng tài khoản Google hoặc email**, để **chỉ mình tôi mới ghi và sửa được dữ liệu quỹ**.
+> Là **thủ quỹ**, tôi muốn **đăng nhập bằng tài khoản Google**, để **chỉ mình tôi mới ghi và sửa được dữ liệu quỹ**.
 
 **Tiêu chí chấp nhận**
 - **AC1:** _Cho trước_ tôi chưa đăng nhập, _khi_ bấm "Đăng nhập với Google" và cấp quyền, _thì_ tôi được chuyển đến trang danh sách quỹ của mình.
-- **AC2:** _Cho trước_ tôi chọn đăng nhập bằng email, _khi_ nhập email và bấm vào link trong hộp thư, _thì_ tôi đăng nhập thành công mà không cần mật khẩu.
-- **AC3:** _Cho trước_ tôi chưa đăng nhập, _khi_ truy cập trực tiếp trang ghi giao dịch, _thì_ hệ thống chuyển tôi về trang đăng nhập.
+- **AC2:** _Cho trước_ tôi chưa đăng nhập, _khi_ truy cập trực tiếp trang ghi giao dịch, _thì_ hệ thống chuyển tôi về trang đăng nhập.
+- **AC3:** Hệ thống **không gửi email** dưới bất kỳ hình thức nào (không magic link, không thông báo).
 
 #### US-02: Tạo quỹ mới · Must
 > Là **thủ quỹ**, tôi muốn **tạo một quỹ với tên, mô tả và mức đóng mỗi người**, để **bắt đầu quản lý thu chi**.
@@ -220,10 +221,22 @@
 **Tiêu chí chấp nhận**
 - **AC1:** File mở được bằng Excel và hiển thị đúng tiếng Việt (mã hóa UTF-8 có BOM).
 
-#### US-21: Mã VietQR cho từng thành viên · Won't (phiên bản này)
-> Là **thành viên**, tôi muốn **quét mã QR có sẵn số tiền và nội dung chuyển khoản**, để **đóng quỹ nhanh và không ghi sai nội dung**.
+#### US-21: Mã VietQR điền sẵn cho từng thành viên · Must
+> Là **thủ quỹ**, tôi muốn **gắn tài khoản ngân hàng của mình vào quỹ**, để **thành viên chuyển tiền thẳng vào tài khoản đó**.
+> Là **thành viên**, tôi muốn **quét một mã QR đã có sẵn số tiền và nội dung chuyển khoản**, để **đóng quỹ nhanh và không ghi sai nội dung**.
 
-_Để dành cho phiên bản 2, đi cùng tính năng tự động khớp giao dịch ngân hàng._
+**Tiêu chí chấp nhận**
+- **AC1:** _Khi_ thủ quỹ nhập ngân hàng, số tài khoản, tên chủ tài khoản (và tiền tố nội dung, ví dụ `QUY12A1`), _thì_ quỹ lưu lại thông tin này để sinh mã VietQR.
+- **AC2:** _Cho trước_ quỹ đã có tài khoản ngân hàng, _khi_ thành viên mở trang quỹ, _thì_ thấy mã VietQR **điền sẵn số tiền** bằng phần còn thiếu của mức đóng và **nội dung chuyển khoản** theo mẫu `[tiền tố] [TÊN THÀNH VIÊN không dấu]`.
+- **AC3:** Mã quét được bằng app ngân hàng và chuyển **thẳng vào tài khoản thủ quỹ**. **App không nhận, không giữ tiền.**
+- **AC4:** Có nút **"Lưu ảnh QR"** và **"Sao chép nội dung chuyển khoản"** để dùng khi app ngân hàng không quét trực tiếp.
+- **AC5:** _Cho trước_ quỹ **chưa** gắn tài khoản ngân hàng, _thì_ không hiện mã QR, chỉ hiện hướng dẫn thủ quỹ bổ sung (app vẫn hoạt động bình thường ở chế độ ghi nhận thủ công).
+- **AC6:** Việc đóng tiền qua QR **không tự tạo** giao dịch (chưa có tự-động-khớp ở US-22); thủ quỹ vẫn ghi nhận khoản thu như khoản chuyển khoản bình thường sau khi nhận được tiền.
+
+#### US-22: Tự động khớp giao dịch ngân hàng · Won't (phiên bản này)
+> Là **thủ quỹ**, tôi muốn **app tự ghi nhận và khớp khoản đóng ngay khi tiền về tài khoản**, để **không phải nhập tay từng khoản thu**.
+
+_Để dành cho phiên bản 2: kết nối webhook của dịch vụ đọc biến động số dư (SePay, Casso). Vẫn theo nguyên tắc app không giữ tiền._
 
 ---
 
@@ -310,6 +323,8 @@ flowchart TD
 
 | Phiên bản | Gồm user story | Mục tiêu |
 |---|---|---|
-| **MVP (tuần 1–4)** | Toàn bộ **Must**: US-01 → US-04, US-06 → US-16 | Dùng được cho một lớp hoặc CLB thật |
+| **MVP (tuần 1–4)** | Toàn bộ **Must**: US-01 → US-04, US-06 → US-16, **US-21 (VietQR)** | Dùng được cho một lớp hoặc CLB thật |
 | **MVP+ (tuần 5–6)** | **Should**: US-17, US-18, US-19 | Hoàn thiện trải nghiệm sau phản hồi |
-| **Sau đồ án** | **Could**: US-05, US-20. **Won't**: US-21 | Mở rộng |
+| **Sau đồ án** | **Could**: US-05, US-20. **Won't**: US-22 (tự động khớp) | Mở rộng |
+
+> **Thứ tự lập trình:** US-21 (VietQR) được làm **sớm, ngay sau phần ghi thu/chi** (US-06, US-07, US-09), vì đây là trải nghiệm đóng tiền trọng tâm — dù về phạm vi nó thuộc nhóm hoàn thiện.

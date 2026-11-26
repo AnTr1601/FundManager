@@ -30,11 +30,14 @@ Web app quản lý quỹ minh bạch cho một lớp học, câu lạc bộ, nh�
 5. **Danh sách đã đóng / chưa đóng:** tính năng "sát thủ", thủ quỹ đỡ phải đi nhắc từng người.
 6. **Nhật ký thay đổi:** không cho xóa giao dịch, chỉ cho "hủy" kèm lý do. Mọi lần sửa đều lưu lại bản cũ. **Đây là phần tạo ra sự minh bạch thật sự.**
 7. **Link chia sẻ** chỉ để xem, gửi vào nhóm Zalo.
+8. **Chuyển tiền bằng VietQR:** mỗi quỹ gắn tài khoản ngân hàng của thủ quỹ. App sinh **mã VietQR điền sẵn số tiền** (theo mức đóng) **và nội dung chuyển khoản** cho từng thành viên (ví dụ `QUY12A1 NGUYENVANA`). Thành viên quét bằng app ngân hàng, tiền chạy **thẳng vào tài khoản thủ quỹ**. **App không giữ, không chuyển tiền** — chỉ tạo mã cho tiện; việc ghi nhận vẫn là một khoản thu chuyển khoản như bình thường.
+
+> **Ranh giới quan trọng:** app **không bao giờ giữ tiền của ai**. VietQR chỉ giúp người đóng chuyển thẳng vào tài khoản ngân hàng của thủ quỹ, giống như điền sẵn nội dung chuyển khoản. Nhờ vậy dự án vẫn ở mức "rủi ro thấp", không phải dịch vụ trung gian thanh toán.
 
 ## 4. Để sau (sau MVP)
 
-- [ ] Mã **VietQR** cho từng thành viên, kèm nội dung chuyển khoản tự điền (ví dụ `QUY12A1 NGUYENVANA`).
-- [ ] Tự động khớp giao dịch qua dịch vụ đọc biến động số dư (SePay, Casso… có webhook).
+- [ ] **Tự động khớp giao dịch** qua dịch vụ đọc biến động số dư tài khoản ngân hàng (SePay, Casso… có webhook): app tự tạo khoản thu và khớp với thành viên theo nội dung chuyển khoản. Vẫn không giữ tiền.
+- [ ] **Đóng tiền định kỳ / nhiều kỳ** trong cùng một quỹ (mô hình "kỳ"): theo dõi trạng thái đóng theo từng tháng/đợt. MVP giữ đơn giản mỗi quỹ = một đợt thu; muốn nhiều kỳ thì tạo quỹ mới cho mỗi kỳ.
 - [ ] Nhắc đóng tiền tự động.
 - [ ] Xuất báo cáo PDF hoặc Excel cuối kỳ.
 - [ ] Bình luận hoặc hỏi đáp dưới từng khoản chi.
@@ -44,7 +47,10 @@ Web app quản lý quỹ minh bạch cho một lớp học, câu lạc bộ, nh�
 ```sql
 funds (
   id, name, description, owner_id,
-  target_per_member, created_at
+  target_per_member,
+  bank_bin, bank_account_number, bank_account_name,  -- cho VietQR (tài khoản thủ quỹ)
+  transfer_prefix,                                    -- tiền tố nội dung CK, ví dụ 'QUY12A1'
+  created_at
 )
 
 members (
@@ -80,7 +86,7 @@ audit_logs (
 | Frontend | Next.js / React + Tailwind | Mobile-first, vì người dùng mở từ link Zalo |
 | Backend + DB + Auth + Storage | **Supabase** (Postgres) | Gói miễn phí dư dùng. Có thể thay bằng Firebase |
 | Deploy | Vercel | Miễn phí cho dự án cá nhân |
-| Đăng nhập | Email hoặc Google cho thủ quỹ | Thành viên xem qua link, không cần tài khoản |
+| Đăng nhập | Google cho thủ quỹ | Thành viên xem qua link, không cần tài khoản. **App không gửi email nào** |
 
 ## 7. Lộ trình
 

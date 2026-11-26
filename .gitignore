@@ -1,0 +1,22 @@
+# Công cụ/agent cục bộ — không thuộc mã nguồn dự án
+.claude/
+skills-lock.json
+
+# Node / Next.js (chuẩn bị cho bước scaffold)
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Biến môi trường (không bao giờ commit secret)
+.env
+.env.local
+.env*.local
+
+# Nhật ký & hệ điều hành
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
