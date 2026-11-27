@@ -1,6 +1,6 @@
 # Kế hoạch triển khai: Quỹ Minh Bạch (MVP)
 
-**Nguồn:** `01-hinh-thanh-y-tuong.md`, `02-user-stories.md`, `03-phan-tich-yeu-cau.md`, `04-thiet-ke-he-thong.md`
+**Nguồn:** `docs/01-hinh-thanh-y-tuong.md`, `docs/02-user-stories.md`, `docs/03-phan-tich-yeu-cau.md`, `docs/04-thiet-ke-he-thong.md`
 **Ngày lập:** 26/11/2026
 
 ## Tổng quan
@@ -49,4 +49,4 @@ Chi tiết + tiêu chí nghiệm thu: xem `tasks/todo.md`. Thứ tự theo phụ
 ## Câu hỏi mở
 
 - Đã hoãn: **đóng tiền định kỳ/nhiều kỳ** (mô hình "kỳ") → phiên bản sau; MVP mỗi quỹ = một đợt.
-- 3 câu hỏi mở cuối `04-thiet-ke-he-thong.md` (đăng nhập giả lập, code tiếng Anh/hiển thị tiếng Việt, biểu đồ tự vẽ) — chờ xác nhận lúc scaffold.
+- 3 câu hỏi mở cuối `docs/04-thiet-ke-he-thong.md` (đăng nhập giả lập, code tiếng Anh/hiển thị tiếng Việt, biểu đồ tự vẽ) — chờ xác nhận lúc scaffold.

@@ -100,7 +100,8 @@ Việc chuyển đổi chỉ là **đổi một biến môi trường** `DATA_BA
 
 ```
 FundManager/
-├── 01..03 *.md, 04-thiet-ke-he-thong.md, MVP.md   # Tài liệu dự án
+├── README.md                  # Giới thiệu ngắn ở gốc
+├── docs/                      # Tài liệu dự án (01..04 + MVP.md)
 ├── spec/                      # Spec kỹ thuật rút gọn (bước sau, nếu cần tách module)
 ├── tasks/                     # plan.md + todo.md (Bước 5)
 ├── src/
