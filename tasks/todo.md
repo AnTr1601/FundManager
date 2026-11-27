@@ -4,26 +4,26 @@ Thứ tự theo phụ thuộc. Mỗi task: **AC** = tiêu chí chấp nhận, **
 
 ---
 
-## Pha 0 — Nền móng
+## Pha 0 — Nền móng ✅ HOÀN THÀNH
 
-### T1: Scaffold Next.js + Tailwind + lint
+### ✅ T1: Scaffold Next.js + Tailwind + lint
 - AC: Dự án Next.js 15 App Router + TS strict + Tailwind 4 khởi động; trang chủ tạm hiển thị "Quỹ Minh Bạch"; cấu trúc thư mục `src/{app,domain,ports,adapters,application,lib,components}` theo Bước 4.
 - V: `npm run dev` mở được; `npm run build` thành công; `npm run lint` sạch.
 - Dep: None · Size: M
 
-### T2: Vitest + script kiểm thử
+### ✅ T2: Vitest + script kiểm thử
 - AC: Cài Vitest; có `npm test`, `npm run test:watch`, `npm run typecheck`; một test mẫu xanh; `tsconfig` bật `strict` + alias `@/*`.
 - V: `npm test` xanh; `npm run typecheck` không lỗi.
 - Dep: T1 · Size: S
 
-### T3: Kiểu miền + tiện ích định dạng (TDD)
+### ✅ T3: Kiểu miền + tiện ích định dạng (TDD)
 - AC: `domain/types.ts` (Fund, Member, Transaction, AuditLog, enums, branded id, trường ngân hàng); `domain/errors.ts`; `domain/money.ts` (`assertValidAmount`, add/sub); `lib/format.ts` (`formatMoney` → `1.250.000 đ`, `formatDate` → `21/11/2026`).
 - AC: Test cho money + format phủ biên (0, âm, >1e9, phân cách nghìn).
 - V: `npm test` xanh (các test format/money).
 - Dep: T2 · Size: M
 
-### Điểm dừng 0
-- [ ] Build sạch, test xanh, cấu trúc thư mục đúng Bước 4. Rà soát với người dùng.
+### Điểm dừng 0 ✅
+- [x] Build sạch, test xanh (10 test), cấu trúc thư mục đúng Bước 4. Chờ rà soát với người dùng.
 
 ---
 
