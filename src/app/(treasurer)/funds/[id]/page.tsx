@@ -7,19 +7,31 @@ import {
   listMembersForIncome,
   getFundTransactions,
   lastExpenseCategory,
+  buildMemberQRs,
+  listAuditLog,
 } from "@/application/transactions";
 import { DomainError } from "@/domain/errors";
-import type { FundId } from "@/domain/types";
+import type { AuditAction, FundId } from "@/domain/types";
 import { formatMoney, formatDate } from "@/lib/format";
-import { methodLabel, categoryLabel } from "@/lib/labels";
+import { methodLabel, categoryLabel, EXPENSE_CATEGORIES } from "@/lib/labels";
 import { IncomeForm } from "./income-form";
 import { ExpenseForm } from "./expense-form";
+import { MemberQR } from "./member-qr";
 import {
   addMembersAction,
   renameMemberAction,
   setMemberActiveAction,
   removeMemberAction,
+  updateFundBankAction,
+  editTxnAction,
+  voidTxnAction,
 } from "./actions";
+
+const AUDIT_LABEL: Record<AuditAction, string> = {
+  create: "Tạo",
+  update: "Sửa",
+  void: "Hủy",
+};
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -51,13 +63,24 @@ export default async function FundDetailPage({
   const incomeMembers = await listMembersForIncome(ports, fund.id);
   const { totals, transactions } = await getFundTransactions(ports, fund.id);
   const defaultCategory = await lastExpenseCategory(ports, fund.id);
+  const qr = await buildMemberQRs(ports, fund.id);
+  const audit = await listAuditLog(ports, fund.id);
   const today = ports.clock.today();
   const memberNames = new Map(members.map((m) => [m.id, m.name]));
+  const txnWho = new Map(
+    transactions.map((t) => [
+      t.id,
+      t.type === "income"
+        ? (memberNames.get(t.memberId!) ?? "Khoản thu")
+        : (t.purpose ?? "Khoản chi"),
+    ]),
+  );
 
   const sp = await searchParams;
   const err = firstStr(sp.err);
   const added = firstStr(sp.added);
   const skipped = firstStr(sp.skipped);
+  const saved = firstStr(sp.saved);
 
   return (
     <div className="space-y-8">
@@ -100,6 +123,108 @@ export default async function FundDetailPage({
           .
         </p>
       )}
+
+      {saved === "bank" && (
+        <p
+          role="status"
+          className="rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-2 text-sm text-green-700"
+        >
+          Đã lưu tài khoản ngân hàng.
+        </p>
+      )}
+
+      {/* ---- Tài khoản nhận tiền (VietQR) ---- */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Tài khoản nhận tiền (VietQR)</h2>
+        <form
+          action={updateFundBankAction}
+          className="grid gap-3 sm:grid-cols-2"
+        >
+          <input type="hidden" name="fundId" value={fund.id} />
+          <div className="space-y-1">
+            <label htmlFor="bankBin" className="block text-sm font-medium">
+              Mã BIN ngân hàng <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="bankBin"
+              name="bankBin"
+              defaultValue={fund.bankBin ?? ""}
+              required
+              inputMode="numeric"
+              placeholder="VD: 970436 (Vietcombank)"
+              className="w-full rounded-lg border border-foreground/15 bg-transparent px-3 py-2"
+            />
+          </div>
+          <div className="space-y-1">
+            <label
+              htmlFor="bankAccountNumber"
+              className="block text-sm font-medium"
+            >
+              Số tài khoản <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="bankAccountNumber"
+              name="bankAccountNumber"
+              defaultValue={fund.bankAccountNumber ?? ""}
+              required
+              className="w-full rounded-lg border border-foreground/15 bg-transparent px-3 py-2"
+            />
+          </div>
+          <div className="space-y-1">
+            <label
+              htmlFor="bankAccountName"
+              className="block text-sm font-medium"
+            >
+              Tên chủ tài khoản <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="bankAccountName"
+              name="bankAccountName"
+              defaultValue={fund.bankAccountName ?? ""}
+              required
+              maxLength={100}
+              className="w-full rounded-lg border border-foreground/15 bg-transparent px-3 py-2"
+            />
+          </div>
+          <div className="space-y-1">
+            <label
+              htmlFor="transferPrefix"
+              className="block text-sm font-medium"
+            >
+              Tiền tố nội dung{" "}
+              <span className="text-foreground/40">(tùy chọn)</span>
+            </label>
+            <input
+              id="transferPrefix"
+              name="transferPrefix"
+              defaultValue={fund.transferPrefix ?? ""}
+              maxLength={20}
+              placeholder="VD: QUY12A1"
+              className="w-full rounded-lg border border-foreground/15 bg-transparent px-3 py-2"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <button
+              type="submit"
+              className="rounded-lg bg-foreground px-4 py-2 font-medium text-background"
+            >
+              Lưu tài khoản
+            </button>
+          </div>
+        </form>
+
+        <div className="space-y-2">
+          <h3 className="font-medium">Mã QR đóng tiền</h3>
+          {qr.configured ? (
+            <MemberQR items={qr.items} />
+          ) : (
+            <p className="text-foreground/60">
+              Chưa gắn tài khoản ngân hàng. Điền thông tin ở trên và lưu để hiện
+              mã QR đóng tiền cho thành viên.
+            </p>
+          )}
+        </div>
+      </section>
 
       {/* ---- Ghi khoản thu ---- */}
       <section className="space-y-3">
@@ -151,40 +276,182 @@ export default async function FundDetailPage({
                 t.type === "expense" ? categoryLabel(t.category) : "",
                 methodLabel(t.paymentMethod),
                 t.noReceipt ? "Không có chứng từ" : "",
+                !voided && t.updatedAt ? "Đã sửa" : "",
                 voided ? "Đã hủy" : "",
               ]
                 .filter(Boolean)
                 .join(" · ");
               return (
-                <li
-                  key={t.id}
-                  className="flex items-center justify-between gap-3 px-4 py-2"
-                >
-                  <div className="min-w-0">
-                    <p
-                      className={`truncate font-medium ${
-                        voided ? "text-foreground/40 line-through" : ""
+                <li key={t.id} className="space-y-2 px-4 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate font-medium ${
+                          voided ? "text-foreground/40 line-through" : ""
+                        }`}
+                      >
+                        {who}
+                      </p>
+                      <p className="text-xs text-foreground/50">{meta}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 font-semibold tabular-nums ${
+                        voided
+                          ? "text-foreground/40 line-through"
+                          : t.type === "expense"
+                            ? "text-red-600"
+                            : "text-green-700"
                       }`}
                     >
-                      {who}
-                    </p>
-                    <p className="text-xs text-foreground/50">{meta}</p>
+                      {t.type === "income" ? "+" : "−"}
+                      {formatMoney(t.amount)}
+                    </span>
                   </div>
-                  <span
-                    className={`shrink-0 font-semibold tabular-nums ${
-                      voided
-                        ? "text-foreground/40 line-through"
-                        : t.type === "expense"
-                          ? "text-red-600"
-                          : "text-green-700"
-                    }`}
-                  >
-                    {t.type === "income" ? "+" : "−"}
-                    {formatMoney(t.amount)}
-                  </span>
+
+                  {!voided && (
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <details className="min-w-0">
+                        <summary className="cursor-pointer text-foreground/60">
+                          Sửa
+                        </summary>
+                        <form
+                          action={editTxnAction}
+                          className="mt-2 flex flex-wrap items-end gap-2 rounded-lg border border-foreground/10 p-3"
+                        >
+                          <input type="hidden" name="fundId" value={fund.id} />
+                          <input type="hidden" name="txnId" value={t.id} />
+                          <label className="text-xs">
+                            Số tiền
+                            <input
+                              name="amount"
+                              type="number"
+                              min={1}
+                              step={1}
+                              defaultValue={t.amount}
+                              required
+                              className="block w-32 rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                            />
+                          </label>
+                          <label className="text-xs">
+                            Ngày
+                            <input
+                              name="txnDate"
+                              type="date"
+                              defaultValue={t.txnDate}
+                              max={today}
+                              required
+                              className="block rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                            />
+                          </label>
+                          {t.type === "expense" && (
+                            <>
+                              <label className="text-xs">
+                                Mục đích
+                                <input
+                                  name="purpose"
+                                  defaultValue={t.purpose ?? ""}
+                                  maxLength={200}
+                                  className="block rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                                />
+                              </label>
+                              <label className="text-xs">
+                                Danh mục
+                                <select
+                                  name="category"
+                                  defaultValue={t.category ?? "other"}
+                                  className="block rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                                >
+                                  {EXPENSE_CATEGORIES.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                      {c.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </>
+                          )}
+                          <label className="text-xs">
+                            Ghi chú
+                            <input
+                              name="note"
+                              defaultValue={t.note ?? ""}
+                              maxLength={500}
+                              className="block rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-md bg-foreground px-3 py-1 text-background"
+                          >
+                            Lưu
+                          </button>
+                        </form>
+                      </details>
+
+                      <details className="min-w-0">
+                        <summary className="cursor-pointer text-red-600">
+                          Hủy
+                        </summary>
+                        <form
+                          action={voidTxnAction}
+                          className="mt-2 flex flex-wrap items-end gap-2 rounded-lg border border-red-500/20 p-3"
+                        >
+                          <input type="hidden" name="fundId" value={fund.id} />
+                          <input type="hidden" name="txnId" value={t.id} />
+                          <label className="text-xs">
+                            Lý do hủy (5–200 ký tự)
+                            <input
+                              name="reason"
+                              required
+                              minLength={5}
+                              maxLength={200}
+                              className="block w-64 rounded-md border border-foreground/15 bg-transparent px-2 py-1"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-md bg-red-600 px-3 py-1 text-white"
+                          >
+                            Xác nhận hủy
+                          </button>
+                        </form>
+                      </details>
+                    </div>
+                  )}
                 </li>
               );
             })}
+          </ul>
+        )}
+      </section>
+
+      {/* ---- Nhật ký thay đổi ---- */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">
+          Nhật ký thay đổi{" "}
+          <span className="text-sm font-normal text-foreground/50">
+            ({audit.length})
+          </span>
+        </h2>
+        {audit.length === 0 ? (
+          <p className="text-foreground/60">Chưa có thay đổi nào.</p>
+        ) : (
+          <ul className="divide-y divide-foreground/10 rounded-lg border border-foreground/10 text-sm">
+            {audit.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center justify-between gap-3 px-4 py-2"
+              >
+                <span>
+                  <span className="font-medium">{AUDIT_LABEL[a.action]}</span>
+                  {" · "}
+                  {txnWho.get(a.transactionId) ?? "Giao dịch"}
+                </span>
+                <span className="shrink-0 text-xs text-foreground/50">
+                  {formatDate(a.createdAt)}
+                </span>
+              </li>
+            ))}
           </ul>
         )}
       </section>
