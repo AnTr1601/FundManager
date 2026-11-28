@@ -1,7 +1,9 @@
 import { z } from "zod";
 import type { AppPorts, NewFund } from "@/ports";
-import type { Fund, UserId } from "@/domain/types";
+import type { Fund, FundId, UserId } from "@/domain/types";
 import { computeTotals, type FundTotals } from "@/domain/balance";
+import { DomainError } from "@/domain/errors";
+import { requireOwnedFund } from "./guard";
 
 /** Kiểm tra dữ liệu tạo quỹ ở biên ứng dụng (FR-03; AT-03). */
 export const createFundSchema = z.object({
@@ -41,6 +43,50 @@ export async function createFund(
     targetPerMember: fields.targetPerMember,
   };
   return ports.funds.create(input);
+}
+
+/** Thông tin nhận tiền cho VietQR (FR-19; AT-32). */
+export const bankSchema = z.object({
+  bankBin: z.string().trim().regex(/^\d{6}$/, "Mã BIN ngân hàng gồm 6 chữ số."),
+  bankAccountNumber: z
+    .string()
+    .trim()
+    .regex(/^\w{4,30}$/, "Số tài khoản không hợp lệ."),
+  bankAccountName: z
+    .string()
+    .trim()
+    .min(1, "Tên chủ tài khoản bắt buộc.")
+    .max(100, "Tên chủ tài khoản tối đa 100 ký tự."),
+  transferPrefix: z
+    .string()
+    .trim()
+    .max(20, "Tiền tố tối đa 20 ký tự.")
+    .optional(),
+});
+
+/** Gắn/cập nhật tài khoản ngân hàng nhận tiền của quỹ. */
+export async function updateFundBank(
+  ports: AppPorts,
+  ownerId: UserId,
+  fundId: FundId,
+  raw: unknown,
+): Promise<Fund> {
+  await requireOwnedFund(ports, ownerId, fundId);
+  const parsed = bankSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new DomainError(
+      "VALIDATION",
+      parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.",
+    );
+  }
+  const f = parsed.data;
+  return ports.funds.update(fundId, {
+    bankBin: f.bankBin,
+    bankAccountNumber: f.bankAccountNumber,
+    bankAccountName: f.bankAccountName,
+    transferPrefix:
+      f.transferPrefix && f.transferPrefix.length > 0 ? f.transferPrefix : null,
+  });
 }
 
 export interface FundWithBalance {

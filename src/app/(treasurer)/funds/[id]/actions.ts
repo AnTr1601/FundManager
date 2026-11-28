@@ -15,11 +15,14 @@ import {
   recordIncome,
   recordExpense,
   expenseSchema,
+  editFundTransaction,
+  voidFundTransaction,
   type AttachmentInput,
 } from "@/application/transactions";
+import { updateFundBank } from "@/application/funds";
 import { DomainError } from "@/domain/errors";
 import type { AppPorts } from "@/ports";
-import type { FundId, MemberId } from "@/domain/types";
+import type { FundId, MemberId, TxnId } from "@/domain/types";
 import type { IncomeState } from "./income-state";
 import type { ExpenseState } from "./expense-state";
 
@@ -180,6 +183,81 @@ export async function recordExpenseAction(
   }
   revalidatePath(`/funds/${fundId}`);
   return { status: "success" };
+}
+
+export async function editTxnAction(formData: FormData): Promise<void> {
+  const fundId = String(formData.get("fundId") ?? "");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const ports = getPorts();
+  const txnId = String(formData.get("txnId") ?? "") as TxnId;
+
+  const raw = {
+    amount: String(formData.get("amount") ?? ""),
+    txnDate: String(formData.get("txnDate") ?? ""),
+    note: formData.get("note") ? String(formData.get("note")) : undefined,
+    purpose: formData.get("purpose")
+      ? String(formData.get("purpose"))
+      : undefined,
+    category: formData.get("category")
+      ? String(formData.get("category"))
+      : undefined,
+  };
+
+  let error: string | null = null;
+  try {
+    await editFundTransaction(ports, user.id, fundId as FundId, txnId, raw);
+  } catch (e) {
+    error = messageOf(e);
+  }
+  if (error) redirect(`/funds/${fundId}?err=${encodeURIComponent(error)}`);
+  revalidatePath(`/funds/${fundId}`);
+  redirect(`/funds/${fundId}`);
+}
+
+export async function voidTxnAction(formData: FormData): Promise<void> {
+  const fundId = String(formData.get("fundId") ?? "");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const ports = getPorts();
+  const txnId = String(formData.get("txnId") ?? "") as TxnId;
+  const reason = String(formData.get("reason") ?? "");
+
+  let error: string | null = null;
+  try {
+    await voidFundTransaction(ports, user.id, fundId as FundId, txnId, reason);
+  } catch (e) {
+    error = messageOf(e);
+  }
+  if (error) redirect(`/funds/${fundId}?err=${encodeURIComponent(error)}`);
+  revalidatePath(`/funds/${fundId}`);
+  redirect(`/funds/${fundId}`);
+}
+
+export async function updateFundBankAction(formData: FormData): Promise<void> {
+  const fundId = String(formData.get("fundId") ?? "");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const ports = getPorts();
+
+  const raw = {
+    bankBin: String(formData.get("bankBin") ?? ""),
+    bankAccountNumber: String(formData.get("bankAccountNumber") ?? ""),
+    bankAccountName: String(formData.get("bankAccountName") ?? ""),
+    transferPrefix: formData.get("transferPrefix")
+      ? String(formData.get("transferPrefix"))
+      : undefined,
+  };
+
+  let error: string | null = null;
+  try {
+    await updateFundBank(ports, user.id, fundId as FundId, raw);
+  } catch (e) {
+    error = messageOf(e);
+  }
+  if (error) redirect(`/funds/${fundId}?err=${encodeURIComponent(error)}`);
+  revalidatePath(`/funds/${fundId}`);
+  redirect(`/funds/${fundId}?saved=bank`);
 }
 
 export async function setMemberActiveAction(formData: FormData): Promise<void> {
